@@ -124,6 +124,18 @@ h1 {
   cursor: grabbing;
 }
 
+.pet-viewport.is-excited:not(.is-celebrating) #petCanvas,
+.webgl-fallback .pet-viewport.is-excited:not(.is-celebrating) .fallback-pet {
+  animation: happy-wiggle var(--happy-speed, 300ms) ease-in-out infinite;
+  transform-origin: 50% 78%;
+}
+
+.pet-viewport.is-celebrating #petCanvas,
+.webgl-fallback .pet-viewport.is-celebrating .fallback-pet {
+  animation: celebration-jump 1400ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+  transform-origin: 50% 82%;
+}
+
 #petCanvas,
 .fallback-pet {
   position: absolute;
@@ -251,6 +263,30 @@ h1 {
   transform: rotate(30deg);
 }
 
+.confetti-layer {
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: var(--piece-width, 9px);
+  height: var(--piece-height, 14px);
+  border: 1px solid rgba(32, 25, 20, 0.28);
+  border-radius: 2px;
+  background: var(--piece-color, #ff5a42);
+  opacity: 0;
+  animation: confetti-burst 1050ms cubic-bezier(0.15, 0.75, 0.28, 1) var(--delay, 0ms) forwards;
+  will-change: transform, opacity;
+}
+
+.confetti-piece.is-round {
+  border-radius: 50%;
+}
+
 .pet-hint {
   position: relative;
   z-index: 10;
@@ -285,6 +321,88 @@ h1 {
 
   to {
     transform: translate3d(7px, 9px, 0) rotate(-7deg);
+  }
+}
+
+@keyframes happy-wiggle {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  25% {
+    transform:
+      translate3d(var(--happy-shake-negative, -1px), 0, 0)
+      rotate(var(--happy-rotation-negative, -0.18deg));
+  }
+
+  75% {
+    transform:
+      translate3d(var(--happy-shake, 1px), 0, 0)
+      rotate(var(--happy-rotation, 0.18deg));
+  }
+}
+
+@keyframes celebration-jump {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
+
+  12% {
+    transform: translate3d(0, 3%, 0) scale(1.07, 0.92) rotate(0deg);
+  }
+
+  34% {
+    transform: translate3d(0, -24%, 0) scale(0.96, 1.05) rotate(-1deg);
+  }
+
+  42% {
+    transform: translate3d(-7px, -26%, 0) scale(0.97, 1.04) rotate(-4deg);
+  }
+
+  48% {
+    transform: translate3d(8px, -26%, 0) scale(0.97, 1.04) rotate(4deg);
+  }
+
+  54% {
+    transform: translate3d(-6px, -25%, 0) scale(0.97, 1.04) rotate(-3deg);
+  }
+
+  60% {
+    transform: translate3d(5px, -23%, 0) scale(0.98, 1.03) rotate(2deg);
+  }
+
+  76% {
+    transform: translate3d(0, 2%, 0) scale(1.08, 0.91) rotate(0deg);
+  }
+
+  86% {
+    transform: translate3d(0, -4%, 0) scale(0.98, 1.02) rotate(0deg);
+  }
+
+  100% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
+}
+
+@keyframes confetti-burst {
+  0% {
+    opacity: 0;
+    transform: translate3d(-50%, -50%, 0) rotate(0deg) scale(0.5);
+  }
+
+  8% {
+    opacity: 1;
+  }
+
+  42% {
+    opacity: 1;
+    transform: translate3d(var(--x-mid), var(--y-mid), 0) rotate(180deg) scale(1);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--x-end), var(--y-end), 0) rotate(var(--spin)) scale(0.92);
   }
 }
 
@@ -323,5 +441,30 @@ h1 {
 
   .hand-shape {
     animation: none;
+  }
+
+  .pet-viewport.is-excited:not(.is-celebrating) #petCanvas,
+  .webgl-fallback .pet-viewport.is-excited:not(.is-celebrating) .fallback-pet {
+    animation: none;
+  }
+
+  .pet-viewport.is-celebrating #petCanvas,
+  .webgl-fallback .pet-viewport.is-celebrating .fallback-pet {
+    animation: reduced-celebration 500ms ease-out both;
+  }
+
+  .confetti-piece {
+    animation-duration: 500ms;
+  }
+}
+
+@keyframes reduced-celebration {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.035);
   }
 }

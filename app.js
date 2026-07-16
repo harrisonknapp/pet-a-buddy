@@ -14,6 +14,7 @@
   const petHint = document.querySelector("#petHint");
   const petAnnouncement = document.querySelector("#petAnnouncement");
   const pettingHand = document.querySelector("#pettingHand");
+  const confettiLayer = document.querySelector("#confettiLayer");
   const previousButton = document.querySelector("#previousPet");
   const nextButton = document.querySelector("#nextPet");
   const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -34,6 +35,9 @@
   let activePointerId = null;
   let lastPointer = null;
   let renderer = null;
+  let happiness = 0;
+  let isCelebrating = false;
+  let celebrationTimers = [];
 
   class PetRenderer {
     constructor(targetCanvas) {
@@ -338,6 +342,9 @@
       renderer.setPointer(x, y, velocityX, velocityY);
       renderer.setStrength(strength);
     }
+
+    const distance = Math.hypot(velocityX * rect.width, velocityY * rect.height);
+    addHappiness(distance, strength);
   }
 
   function stopInteraction() {
@@ -347,11 +354,123 @@
     if (renderer) renderer.setStrength(0);
   }
 
+  function setHappiness(nextHappiness) {
+    happiness = Math.max(0, Math.min(100, nextHappiness));
+    const progress = happiness / 100;
+    const shake = 0.5 + progress * 5;
+    const rotation = shake * 0.18;
+    viewport.style.setProperty("--happy-shake", `${shake.toFixed(2)}px`);
+    viewport.style.setProperty("--happy-shake-negative", `${(-shake).toFixed(2)}px`);
+    viewport.style.setProperty("--happy-rotation", `${rotation.toFixed(2)}deg`);
+    viewport.style.setProperty("--happy-rotation-negative", `${(-rotation).toFixed(2)}deg`);
+    viewport.style.setProperty("--happy-speed", `${Math.round(340 - progress * 190)}ms`);
+    viewport.classList.toggle("is-excited", happiness >= 4 && !isCelebrating);
+  }
+
+  function clearCelebrationTimers() {
+    celebrationTimers.forEach((timer) => window.clearTimeout(timer));
+    celebrationTimers = [];
+  }
+
+  function resetHappiness(cancelCelebration = false) {
+    if (cancelCelebration) {
+      clearCelebrationTimers();
+      isCelebrating = false;
+      viewport.classList.remove("is-celebrating");
+      confettiLayer.replaceChildren();
+    }
+
+    setHappiness(0);
+  }
+
+  function getConfettiOrigin() {
+    if (!currentImage) {
+      return { x: viewport.clientWidth * 0.5, y: viewport.clientHeight * 0.68 };
+    }
+
+    const width = viewport.clientWidth;
+    const height = viewport.clientHeight;
+    const canvasAspect = width / height;
+    const imageAspect = currentImage.naturalWidth / currentImage.naturalHeight;
+
+    if (canvasAspect > imageAspect) {
+      return { x: width * 0.5, y: height * 0.7 };
+    }
+
+    const displayedHeight = width / imageAspect;
+    const offsetY = (height - displayedHeight) * 0.5;
+    return { x: width * 0.5, y: offsetY + displayedHeight * 0.72 };
+  }
+
+  function burstConfetti() {
+    const colors = ["#ff4f3d", "#ffd23f", "#2fc16f", "#2f80ed", "#a95cff", "#ff8ab3"];
+    const origin = getConfettiOrigin();
+    const pieceCount = reducedMotion ? 18 : 42;
+
+    for (let index = 0; index < pieceCount; index += 1) {
+      const piece = document.createElement("span");
+      const angle = (index / pieceCount) * Math.PI * 2 + (Math.random() - 0.5) * 0.45;
+      const spread = 70 + Math.random() * 115;
+      const endX = Math.cos(angle) * spread;
+      const rise = 45 + Math.random() * 105;
+      const fall = 115 + Math.random() * 170;
+
+      piece.className = `confetti-piece${index % 4 === 0 ? " is-round" : ""}`;
+      piece.style.left = `${origin.x}px`;
+      piece.style.top = `${origin.y}px`;
+      piece.style.setProperty("--piece-color", colors[index % colors.length]);
+      piece.style.setProperty("--piece-width", `${6 + Math.random() * 7}px`);
+      piece.style.setProperty("--piece-height", `${8 + Math.random() * 10}px`);
+      piece.style.setProperty("--x-mid", `${endX * 0.65}px`);
+      piece.style.setProperty("--y-mid", `${-rise}px`);
+      piece.style.setProperty("--x-end", `${endX}px`);
+      piece.style.setProperty("--y-end", `${fall}px`);
+      piece.style.setProperty("--spin", `${(Math.random() - 0.5) * 1100}deg`);
+      piece.style.setProperty("--delay", `${Math.random() * 90}ms`);
+      piece.addEventListener("animationend", () => piece.remove(), { once: true });
+      confettiLayer.appendChild(piece);
+    }
+  }
+
+  function startCelebration() {
+    if (isCelebrating) return;
+    isCelebrating = true;
+    setHappiness(0);
+    stopInteraction();
+
+    if (activePointerId !== null && viewport.hasPointerCapture(activePointerId)) {
+      viewport.releasePointerCapture(activePointerId);
+    }
+    activePointerId = null;
+
+    viewport.classList.add("is-celebrating");
+    petAnnouncement.textContent = `${loadedPets[currentIndex].name} is so happy!`;
+
+    celebrationTimers.push(window.setTimeout(burstConfetti, reducedMotion ? 240 : 980));
+    celebrationTimers.push(
+      window.setTimeout(() => {
+        viewport.classList.remove("is-celebrating");
+        isCelebrating = false;
+        celebrationTimers = [];
+      }, reducedMotion ? 520 : 1420),
+    );
+  }
+
+  function addHappiness(distance, strength) {
+    if (isCelebrating || strength < 0.7 || distance < 0.5) return;
+    setHappiness(happiness + Math.min(distance, 38) * 0.22);
+
+    if (happiness >= 100) {
+      startCelebration();
+    }
+  }
+
   async function selectPet(nextIndex, shouldAnnounce = true) {
     currentIndex = (nextIndex + loadedPets.length) % loadedPets.length;
     const token = ++selectionToken;
     const pet = loadedPets[currentIndex];
 
+    resetHappiness(true);
     stopInteraction();
     activePointerId = null;
     currentImage = null;
@@ -392,7 +511,11 @@
   });
 
   viewport.addEventListener("pointerdown", (event) => {
-    if (activePointerId !== null || !isOnPet(event.clientX, event.clientY)) return;
+    if (
+      isCelebrating ||
+      activePointerId !== null ||
+      !isOnPet(event.clientX, event.clientY)
+    ) return;
     activePointerId = event.pointerId;
     viewport.setPointerCapture(event.pointerId);
     viewport.classList.add("is-pressed");
@@ -401,6 +524,7 @@
   });
 
   viewport.addEventListener("pointermove", (event) => {
+    if (isCelebrating) return;
     if (activePointerId === event.pointerId) {
       updateInteraction(event, 1);
       event.preventDefault();
