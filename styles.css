@@ -1,0 +1,327 @@
+:root {
+  color-scheme: light;
+  --background: #f4ecdc;
+  --ink: #201914;
+  --button-fill: #fffaf1;
+  --hand: #efad83;
+  --hand-light: #ffc39e;
+  --hand-line: #4b2d21;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--background);
+  color: var(--ink);
+  font-family: Arial, Helvetica, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  color: inherit;
+  font: inherit;
+}
+
+.game-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: 100%;
+  height: 100vh;
+  min-height: 100vh;
+  height: 100dvh;
+  min-height: 100svh;
+  padding:
+    max(18px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right))
+    max(14px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+}
+
+.pet-picker {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr) 54px;
+  align-items: center;
+  width: min(100%, 760px);
+  margin: 0 auto;
+  gap: clamp(8px, 3vw, 20px);
+}
+
+h1 {
+  margin: 0;
+  overflow: hidden;
+  font-size: clamp(1.25rem, 6.4vw, 4.2rem);
+  font-weight: 900;
+  letter-spacing: -0.055em;
+  line-height: 0.95;
+  text-align: center;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.arrow-button {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  padding: 0 0 3px;
+  place-items: center;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: var(--button-fill);
+  box-shadow: 3px 3px 0 var(--ink);
+  cursor: pointer;
+  font-size: 1.8rem;
+  font-weight: 900;
+  line-height: 1;
+  touch-action: manipulation;
+  transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+}
+
+.arrow-button:hover {
+  background: #ffffff;
+}
+
+.arrow-button:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--ink);
+}
+
+.arrow-button:focus-visible {
+  outline: 4px solid #1473e6;
+  outline-offset: 4px;
+}
+
+.pet-area {
+  display: grid;
+  min-height: 0;
+  place-items: center;
+}
+
+.pet-viewport {
+  position: relative;
+  width: min(100%, 780px);
+  height: 100%;
+  min-height: 0;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.pet-viewport.is-pressed {
+  cursor: grabbing;
+}
+
+#petCanvas,
+.fallback-pet {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#petCanvas {
+  opacity: 1;
+  transition: opacity 130ms ease;
+}
+
+.pet-viewport.is-changing #petCanvas {
+  opacity: 0.35;
+}
+
+.fallback-pet {
+  display: none;
+  object-fit: contain;
+  pointer-events: none;
+  transition: filter 120ms ease, transform 120ms ease;
+}
+
+.webgl-fallback #petCanvas {
+  display: none;
+}
+
+.webgl-fallback .fallback-pet {
+  display: block;
+  transform-origin: var(--fallback-x, 50%) var(--fallback-y, 50%);
+}
+
+.webgl-fallback .pet-viewport.is-petting .fallback-pet {
+  filter: saturate(1.08);
+  transform: scale(1.035);
+}
+
+.petting-hand {
+  --hand-x: 50%;
+  --hand-y: 50%;
+  position: absolute;
+  z-index: 5;
+  top: var(--hand-y);
+  left: var(--hand-x);
+  width: 76px;
+  height: 96px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 6px) scale(0.86);
+  transform-origin: 50% 0;
+  transition: opacity 90ms ease, transform 140ms ease;
+  will-change: top, left, transform;
+}
+
+.petting-hand.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 6px) scale(1);
+}
+
+.hand-shape {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(3px 4px 0 rgba(32, 25, 20, 0.22));
+  transform: rotate(-12deg);
+  transform-origin: 50% 8%;
+  animation: petting-motion 620ms ease-in-out infinite alternate;
+}
+
+.hand-finger,
+.hand-thumb,
+.hand-palm {
+  position: absolute;
+  display: block;
+  border: 2px solid var(--hand-line);
+  background: linear-gradient(90deg, var(--hand) 0 67%, var(--hand-light));
+}
+
+.hand-finger {
+  top: 2px;
+  width: 15px;
+  border-radius: 12px 12px 7px 7px;
+}
+
+.finger-one {
+  left: 8px;
+  height: 55px;
+}
+
+.finger-two {
+  top: -3px;
+  left: 23px;
+  height: 61px;
+}
+
+.finger-three {
+  left: 38px;
+  height: 58px;
+}
+
+.finger-four {
+  top: 9px;
+  left: 53px;
+  height: 49px;
+}
+
+.hand-palm {
+  z-index: 2;
+  top: 39px;
+  left: 8px;
+  width: 60px;
+  height: 53px;
+  border-radius: 45% 48% 38% 42%;
+}
+
+.hand-thumb {
+  z-index: 3;
+  top: 49px;
+  left: -2px;
+  width: 31px;
+  height: 18px;
+  border-radius: 14px 7px 7px 14px;
+  transform: rotate(30deg);
+}
+
+.pet-hint {
+  position: relative;
+  z-index: 10;
+  margin: 4px 0 0;
+  font-size: clamp(0.72rem, 2.8vw, 0.9rem);
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  text-align: center;
+  transition: opacity 180ms ease;
+}
+
+.pet-hint.is-hidden {
+  opacity: 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes petting-motion {
+  from {
+    transform: translate3d(-5px, 1px, 0) rotate(-16deg);
+  }
+
+  to {
+    transform: translate3d(7px, 9px, 0) rotate(-7deg);
+  }
+}
+
+@media (max-height: 560px) {
+  .game-shell {
+    padding-top: max(10px, env(safe-area-inset-top));
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+  }
+
+  .pet-picker {
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
+  }
+
+  .arrow-button {
+    width: 44px;
+    height: 44px;
+    font-size: 1.5rem;
+  }
+
+  .petting-hand {
+    transform: translate(-50%, 4px) scale(0.75);
+  }
+
+  .petting-hand.is-visible {
+    transform: translate(-50%, 4px) scale(0.84);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .hand-shape {
+    animation: none;
+  }
+}

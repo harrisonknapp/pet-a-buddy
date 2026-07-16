@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4ecdc" />
+    <meta
+      name="description"
+      content="Choose a buddy, then touch and drag to give them a pet."
+    />
+    <link rel="preload" href="./assets/morp.png" as="image" />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>Pet a Buddy</title>
+  </head>
+  <body>
+    <main class="game-shell">
+      <header class="pet-picker" aria-label="Choose a buddy">
+        <button class="arrow-button" id="previousPet" type="button" aria-label="Previous pet">
+          <span aria-hidden="true">←</span>
+        </button>
+
+        <h1 id="petTitle">PET A MORP</h1>
+
+        <button class="arrow-button" id="nextPet" type="button" aria-label="Next pet">
+          <span aria-hidden="true">→</span>
+        </button>
+      </header>
+
+      <section class="pet-area" aria-labelledby="petTitle">
+        <div class="pet-viewport" id="petViewport">
+          <canvas
+            id="petCanvas"
+            role="img"
+            aria-label="Morp, ready to be petted"
+          ></canvas>
+          <img class="fallback-pet" id="fallbackPet" src="./assets/morp.png" alt="" />
+
+          <div class="petting-hand" id="pettingHand" aria-hidden="true">
+            <div class="hand-shape">
+              <span class="hand-finger finger-one"></span>
+              <span class="hand-finger finger-two"></span>
+              <span class="hand-finger finger-three"></span>
+              <span class="hand-finger finger-four"></span>
+              <span class="hand-thumb"></span>
+              <span class="hand-palm"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <p class="pet-hint" id="petHint">TOUCH + DRAG TO PET</p>
+      <p class="sr-only" id="petAnnouncement" aria-live="polite"></p>
+    </main>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>
