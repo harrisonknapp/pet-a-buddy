@@ -100,7 +100,6 @@
           uniform vec2 u_pointer;
           uniform vec2 u_velocity;
           uniform float u_strength;
-          uniform float u_time;
           uniform float u_radius;
           varying vec2 v_uv;
 
@@ -121,23 +120,14 @@
           }
 
           void main() {
-            vec2 deltaPx = (v_uv - u_pointer) * u_resolution;
+            vec2 deltaUv = v_uv - u_pointer;
+            vec2 deltaPx = deltaUv * u_resolution;
             float distancePx = length(deltaPx);
             float influence = smoothstep(u_radius, 0.0, distancePx) * u_strength;
-            vec2 direction = deltaPx / max(distancePx, 0.001);
-            float normalizedDistance = clamp(distancePx / u_radius, 0.0, 1.0);
-            float centerWeight = 1.0 - normalizedDistance;
-
-            float ripple = sin(distancePx * 0.085 - u_time * 12.0);
-            float knead = cos(distancePx * 0.04 + u_time * 8.0);
-            float throb = sin(u_time * 9.0 + normalizedDistance * 5.0);
-            vec2 perpendicular = vec2(-direction.y, direction.x);
-            vec2 bulgeOffset = -direction * centerWeight * 0.06 * influence;
-            vec2 radialOffset = direction *
-              (ripple * 0.032 + knead * 0.018 + throb * 0.012) * influence;
-            vec2 shearOffset = perpendicular * ripple * 0.02 * influence;
-            vec2 dragOffset = -u_velocity * influence * 1.15;
-            vec2 sampleUv = v_uv + bulgeOffset + radialOffset + shearOffset + dragOffset;
+            float lensStrength = 0.72 * influence * influence;
+            vec2 magnifyOffset = -deltaUv * lensStrength;
+            vec2 dragOffset = -u_velocity * influence * 0.35;
+            vec2 sampleUv = v_uv + magnifyOffset + dragOffset;
             vec2 textureUv = containTextureUv(sampleUv);
 
             if (
@@ -183,7 +173,6 @@
         pointer: gl.getUniformLocation(this.program, "u_pointer"),
         velocity: gl.getUniformLocation(this.program, "u_velocity"),
         strength: gl.getUniformLocation(this.program, "u_strength"),
-        time: gl.getUniformLocation(this.program, "u_time"),
         radius: gl.getUniformLocation(this.program, "u_radius"),
       };
 
@@ -234,7 +223,7 @@
       }
     }
 
-    draw(time) {
+    draw() {
       const gl = this.gl;
       this.resize();
       gl.clear(gl.COLOR_BUFFER_BIT);
@@ -244,10 +233,9 @@
       gl.uniform2f(this.uniforms.pointer, this.pointer[0], this.pointer[1]);
       gl.uniform2f(this.uniforms.velocity, this.velocity[0], this.velocity[1]);
       gl.uniform1f(this.uniforms.strength, this.strength);
-      gl.uniform1f(this.uniforms.time, time * 0.001);
       gl.uniform1f(
         this.uniforms.radius,
-        Math.max(110, Math.min(260, Math.min(this.canvas.width, this.canvas.height) * 0.38)),
+        Math.max(90, Math.min(220, Math.min(this.canvas.width, this.canvas.height) * 0.32)),
       );
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
@@ -256,7 +244,7 @@
       this.strength += (this.targetStrength - this.strength) * 0.16;
       this.velocity[0] *= 0.9;
       this.velocity[1] *= 0.9;
-      this.draw(time);
+      this.draw();
 
       const isMoving = Math.abs(this.velocity[0]) + Math.abs(this.velocity[1]) > 0.0001;
       if (this.targetStrength > 0 || this.strength > 0.002 || isMoving) {
