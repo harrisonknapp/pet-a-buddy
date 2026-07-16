@@ -1,6 +1,6 @@
 # pet a buddy
 
-A tiny touch-first game for petting Morp, Noonie, and Mouse.
+A tiny touch-first game for petting Morp, Noonie, Mouse, and Get-It.
 
 ## Run locally
 

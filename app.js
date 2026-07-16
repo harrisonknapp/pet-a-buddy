@@ -5,6 +5,7 @@
     { name: "MORP", src: "./assets/morp.png" },
     { name: "NOONIE", src: "./assets/noonie.png" },
     { name: "MOUSE", src: "./assets/mouse.png" },
+    { name: "GET-IT", src: "./assets/get-it.png" },
   ];
 
   const canvas = document.querySelector("#petCanvas");
