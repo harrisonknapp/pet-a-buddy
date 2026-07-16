@@ -125,12 +125,19 @@
             float distancePx = length(deltaPx);
             float influence = smoothstep(u_radius, 0.0, distancePx) * u_strength;
             vec2 direction = deltaPx / max(distancePx, 0.001);
+            float normalizedDistance = clamp(distancePx / u_radius, 0.0, 1.0);
+            float centerWeight = 1.0 - normalizedDistance;
 
-            float ripple = sin(distancePx * 0.105 - u_time * 11.0);
-            float knead = cos(distancePx * 0.047 + u_time * 7.0);
-            vec2 radialOffset = direction * (ripple * 0.012 + knead * 0.006) * influence;
-            vec2 dragOffset = -u_velocity * influence * 0.42;
-            vec2 sampleUv = v_uv + radialOffset + dragOffset;
+            float ripple = sin(distancePx * 0.085 - u_time * 12.0);
+            float knead = cos(distancePx * 0.04 + u_time * 8.0);
+            float throb = sin(u_time * 9.0 + normalizedDistance * 5.0);
+            vec2 perpendicular = vec2(-direction.y, direction.x);
+            vec2 bulgeOffset = -direction * centerWeight * 0.06 * influence;
+            vec2 radialOffset = direction *
+              (ripple * 0.032 + knead * 0.018 + throb * 0.012) * influence;
+            vec2 shearOffset = perpendicular * ripple * 0.02 * influence;
+            vec2 dragOffset = -u_velocity * influence * 1.15;
+            vec2 sampleUv = v_uv + bulgeOffset + radialOffset + shearOffset + dragOffset;
             vec2 textureUv = containTextureUv(sampleUv);
 
             if (
@@ -240,7 +247,7 @@
       gl.uniform1f(this.uniforms.time, time * 0.001);
       gl.uniform1f(
         this.uniforms.radius,
-        Math.max(76, Math.min(150, Math.min(this.canvas.width, this.canvas.height) * 0.24)),
+        Math.max(110, Math.min(260, Math.min(this.canvas.width, this.canvas.height) * 0.38)),
       );
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
@@ -414,7 +421,7 @@
 
     if (event.pointerType === "mouse") {
       if (isOnPet(event.clientX, event.clientY)) {
-        updateInteraction(event, 0.58);
+        updateInteraction(event, 0.8);
       } else {
         stopInteraction();
       }
